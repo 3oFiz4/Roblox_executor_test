@@ -1,4 +1,6 @@
 # Roblox_executor_test
+🟢 Working (last tested: 7, Oct 2026)
+
 A TUI made in Rust with WRD API for simple roblox hack. Probably the **first** roblox executor in TUI form lol. I haven't think of a name of the executor yet... 
 
 READ ME: **Also please understand to NOT abuse this script. I know hacking is fun. I mean, I am addicted to it. But to ever ever use this script for the sole purpose of making people gameplay worse are not cool. I personally use this to automate a coin farm on some roblox game, almost never use it for Aimbot, or something. Karma is real. Trust me.**
