@@ -7,15 +7,66 @@ static DLL: OnceLock<Result<Library, String>> = OnceLock::new();
 fn get_or_load_dll() -> Result<&'static Library, &'static str> {
     let res = DLL.get_or_init(|| {
         unsafe {
-            match Library::new("rbx.dll") {
-                Ok(lib) => {
-                    if let Ok(init) = lib.get::<extern "C" fn()>(b"initialize") {
-                        init();
-                    }
-                    Ok(lib)
-                }
-                Err(e) => Err(format!("API Load fail: {}", e)),
+            let mut candidates: Vec<std::path::PathBuf> = Vec::new();
+
+            if let Ok(env_path) = std::env::var("RBX_DLL_PATH") {
+                candidates.push(std::path::PathBuf::from(env_path));
             }
+
+            if let Ok(exe) = std::env::current_exe() {
+                if let Some(exe_dir) = exe.parent() {
+                    candidates.push(exe_dir.join("rbx.dll"));
+                    candidates.push(exe_dir.join("rbx-1.dll"));
+
+                    let mut curr = exe_dir.to_path_buf();
+                    for _ in 0..5 {
+                        if let Some(parent) = curr.parent() {
+                            candidates.push(parent.join("rbx.dll"));
+                            candidates.push(parent.join("rbx-1.dll"));
+                            candidates.push(parent.join("src").join("rbx.dll"));
+                            candidates.push(parent.join("src").join("rbx-1.dll"));
+                            curr = parent.to_path_buf();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            candidates.push(std::path::PathBuf::from("rbx.dll"));
+            candidates.push(std::path::PathBuf::from("rbx-1.dll"));
+            candidates.push(std::path::PathBuf::from("src/rbx.dll"));
+            candidates.push(std::path::PathBuf::from("src/rbx-1.dll"));
+
+            let mut last_err = String::from("No candidate DLL found");
+            for path in &candidates {
+                if path.exists() {
+                    let load_target = if let Ok(canon) = path.canonicalize() {
+                        let s = canon.to_string_lossy().to_string();
+                        if s.starts_with(r"\\?\") {
+                            std::path::PathBuf::from(&s[4..])
+                        } else {
+                            canon
+                        }
+                    } else {
+                        path.clone()
+                    };
+
+                    match Library::new(&load_target) {
+                        Ok(lib) => {
+                            if let Ok(init) = lib.get::<extern "C" fn()>(b"initialize") {
+                                init();
+                            }
+                            return Ok(lib);
+                        }
+                        Err(e) => {
+                            last_err = format!("Failed to load {:?}: {}", path, e);
+                        }
+                    }
+                }
+            }
+
+            Err(format!("API Load fail: {}", last_err))
         }
     });
 
@@ -116,4 +167,8 @@ pub fn is_process_running(proc_name: &str) -> bool {
     {
         false
     }
+}
+
+pub fn is_roblox_running() -> bool {
+    is_process_running("RobloxPlayerBeta.exe") || is_process_running("Windows10Universal.exe")
 }

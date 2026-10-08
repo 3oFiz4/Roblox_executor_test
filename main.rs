@@ -8,6 +8,15 @@ use std::{error::Error, io};
 use clitype::app::{App, Message};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if !args.is_empty() && args[0] != "--tui" {
+        if let Err(e) = clitype::cli::run_cli(&args) {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+        return Ok(());
+    }
+
     let default_panic = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
         let _ = crossterm::terminal::disable_raw_mode();
