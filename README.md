@@ -34,8 +34,8 @@ Target Replacement String: `WRD API Ready (Executor by: 3ofiz4)` (35 bytes)
 <img width="1530" height="1080" alt="image" src="https://github.com/user-attachments/assets/d83e9ea4-53c0-4e07-8aa6-a31824c206e4" />
 
 ## Installation
-1. Git clone this.
-2. Run `cargo run`, do not do build version.
+1. Git clone this. OR, install via Release.
+2. Run `cargo run`, or do the build version by yourself, and ensure that the `.dll` is sibling to the executable.
 3. Enter any roblox game.
 4. Do `:attach`
 5. Wait until your window glitch.
