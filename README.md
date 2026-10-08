@@ -5,6 +5,8 @@ A TUI made in Rust with for simple roblox (sUNC 85%) hack. Probably the **first*
 
 READ ME: **Also please understand to NOT abuse this script. I know hacking is fun. I mean, I am addicted to it. But to ever ever use this script for the sole purpose of making people gameplay worse are not cool. I personally use this to automate a coin farm on some roblox game, almost never use it for Aimbot, or something. Karma is real. Trust me.**
 
+https://github.com/user-attachments/assets/570b3cb9-47e9-4d82-b482-f99be529f4fd
+
 <img width="964" height="1068" alt="image" src="https://github.com/user-attachments/assets/8e2c91a2-34ce-4e8e-8152-ce2bba97b9e6" />
 
 
