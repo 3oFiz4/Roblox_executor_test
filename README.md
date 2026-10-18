@@ -1,5 +1,5 @@
 # Roblox_executor_test
-🟢 Working (last tested: 7, Oct 2026)
+🟢 Working (last tested: 19, Oct 2026)
 
 A TUI made in Rust with for simple roblox (sUNC 85%) hack. Probably the **first** Roblox executor in TUI/CLI form lol. I haven't think of a beter name of the executor yet... Right now its called CliType 
 
@@ -79,6 +79,33 @@ EXAMPLES:
 ## Coming soon
 1. Script collections.
 2. Idk.. I'll think more of it.
+
+## How does it Work?
+
+Commonly old game hacking (those with `.dll` injection) rely on direct injection to specific game process. They usually do this method via `CreateRemoteThread` method with `LoadLibraryA` imparted, or sometimes they do manual mapping. Of course, many anti-cheat consistently invent a way to prevent cheaters to ever inject a `.dll` to the game directly. Anti-cheats such as Hyperion/Byfron, started to monitor for thread creation, hook standard Windows loader APIs, and even verify memory region integrity. 
+
+But for this program it works in a different way. In order to evade those monitoring, `WRD.dll` works in this way: 
+1. It will act as a **External Process Memory Hook**, so it will remain outside the game's address space while at the same time manipulating Roblox's memory struct via standard Windows debug APIs (`ReadProcessMemory` / `WriteProcessMemory`).
+2. It will trigger `CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS)` and `Process32NextW` to find `RobloxPlayerBeta.exe`.
+3. Do a function call `OpenProcess(0x1fffff, 1, pid)` to obtain a handle with `PROCESS_ALL_ACCESS` rights.
+4. Using `ReadProcessMemory`, the `WRD.dll` scans for Roblox's memory space for the game's root rendering coordinate (`RenderView`)
+5. From the `RenderView` pointer offsets, it chained the pointer to find game's root object `DataModel`.
+6. Then, it traverses the Roblox instance memory to target for `CoreScript`: `DataModel ⟶ CoreGui ⟶ RobloxGui ⟶ Modules ⟶ 'en-us' (Locale ModuleScript)`
+7. Because in Roblox, scripts are always located under `CoreGui` run with `CoreScript`  it will bypass normal player sandbox restrictions.
+8. Because, `wrd.dll` embedded Luau compiler and bytecode encoder (`bytecode_encoder_t`). It will generates a bootstrap loader containing:
+```
+task.spawn(function()
+        -- Connects back to localhost WebSocket server using %CLIENT_PID% and port 3110
+    end)
+```
+9. Then trigger the `WriteProcessMemory` to overwrite a cached bytecode buffer en-us locale `ModuleScript` inside Roblox's memory.
+10. Since the script is placed inside in-game UI module, `WRD.dll` then calls Win32 `SetForegroundWindow` and `mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP)` to emulate a faux user interaction with the game window.
+11. Which causes the engine to re-evaluate the localization module, executing the injected Luau bootstrap code inside Roblox's genuine script engine.
+12. Once the in-game bootstrap runs, `WRD.dll` spins up the internal WebSocket server using CPP `ixwebsocket` library, listening on `http://localhost:3110`.
+13. Then, the bootstrap script that was injected into `CoreGui` establishes a WebSocket connection to `ws://127.0.0.1:3110`
+14. Then user (may) execute a script via `Execute(script)` method call or `ExecuteSpecific(script, pid)`, where `WRD.dll` will capture the string payload, pushes it via local WebSocket to the connected in-game bridge client
+15. Finally, the in-game bridge script evaluates the script in the `CoreGui` context via `task.spawn` and `loadstring` method
+16. Get pwned!
 
 ---
 rawr
