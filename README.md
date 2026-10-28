@@ -1,5 +1,5 @@
 # Roblox_executor_test
-🟢 Working (last tested: 19, Oct 2026)
+🟢 Working (last tested: 29, Oct 2026)
 
 A TUI made in Rust with for simple roblox (sUNC 85%) hack. Probably the **first** Roblox executor in TUI/CLI form lol. I haven't think of a beter name of the executor yet... Right now its called CliType 
 
